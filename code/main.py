@@ -7,11 +7,11 @@ from functions import *
 
 
 N = 32
+d = 2
 k = 0.3
 l = 0.02
-eps = 1e-2
 
-lattice = Lattice(N, k, l, eps)
+lattice = Lattice(N, d, k, l)
 
 
 print("burn in...\n")
@@ -24,7 +24,8 @@ for i in tqdm(range(1000)):
 	cfgs.append(copy.deepcopy(lattice.phi))
 
 cfgs = np.array(cfgs)
-np.savetxt("mag.dat", cfgs.mean(axis=(1,2)))
+axis = tuple([i+1 for i in range(len(cfgs.shape)-1)])
+np.savetxt("mag.dat", cfgs.mean(axis=axis))
 
 
 print("\nrecording...\n")
