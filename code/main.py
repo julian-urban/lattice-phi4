@@ -37,7 +37,7 @@ for i in tqdm(range(n_steps)):
     # n_accepted += lattice.hmc()
     n_accepted += lattice.metropolis()
 
-    if i % 10:
+    if i % 10 == 0:
         cfgs.append(copy.deepcopy(lattice.phi))
 
 cfgs = np.array(cfgs)
