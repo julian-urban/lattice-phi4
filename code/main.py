@@ -15,32 +15,34 @@ lattice = Lattice(N, d, k, l)
 
 
 print("burn in...\n")
-cfgs = []
+mag = []
 
 for i in tqdm(range(1000)):
-	# lattice.langevin()
-	lattice.hmc()
+    # lattice.langevin()
+    # lattice.hmc()
+    lattice.metropolis()
 
-	cfgs.append(copy.deepcopy(lattice.phi))
+    mag.append(lattice.phi.mean())
 
-cfgs = np.array(cfgs)
-axis = tuple([i+1 for i in range(len(cfgs.shape)-1)])
-np.savetxt("mag.dat", cfgs.mean(axis=axis))
+np.savetxt("mag.dat", np.array(mag))
 
 
 print("\nrecording...\n")
 cfgs = []
+n_accepted = 0
+n_steps = 10000
 
-for i in tqdm(range(10000)):
-    # lattice.langevin()
-    lattice.hmc()
+for i in tqdm(range(n_steps)):
+    # n_accepted += lattice.langevin()
+    # n_accepted += lattice.hmc()
+    n_accepted += lattice.metropolis()
 
     if i % 10:
         cfgs.append(copy.deepcopy(lattice.phi))
 
 cfgs = np.array(cfgs)
 print("\ndone.")
-
+print("accept rate:", n_accepted / n_steps)
 
 print("\ncalculating observables...\n")
 

@@ -20,6 +20,18 @@ class Lattice:
             action += -2. * self.k * self.phi * np.roll(self.phi, 1, mu)
 
         return action.sum()
+
+    def get_local_action(self, xyz):
+        action = (1 - 2 * self.l) * self.phi[xyz]**2 + self.l * self.phi[xyz]**4
+
+        for mu in range(self.d):
+            hop = np.zeros((self.d, 1), dtype=int)
+            hop[mu,0] = 1
+            xyz_plus = tuple(map(tuple, ((np.array(xyz) + hop) % self.N)))
+            xyz_minus = tuple(map(tuple, ((np.array(xyz) - hop) % self.N)))
+            action += -2. * self.k * self.phi[xyz] * (self.phi[xyz_plus] + self.phi[xyz_minus])
+
+        return action
     
     def get_drift(self):
         drift = 2 * self.phi * (2 * self.l * (1 - self.phi**2) - 1)
@@ -32,11 +44,29 @@ class Lattice:
     def get_hamiltonian(self, chi, action):
         return 0.5 * np.sum(chi**2) + action
 
+    def metropolis(self, sigma=1.):
+        xyz = tuple(map(tuple, np.random.randint(0, self.N, (self.d,1))))
+        phi_0 = self.phi[xyz]
+        S_0 = self.get_local_action(xyz)
+        
+        self.phi[xyz] += sigma * np.random.randn()
+
+        dS = self.get_local_action(xyz) - S_0
+
+        if dS > 0:
+            if np.random.rand() >= np.exp(-dS):
+                self.phi[xyz] = phi_0
+
+                return False
+        return True
+            
     def langevin(self, dt=0.01):
         chi = np.random.randn(*self.shape)
 
         self.phi += (dt * self.get_drift() +
                      np.sqrt(dt) * chi)
+
+        return True
 
     def hmc(self, n_steps=100):
         dt = 1 / n_steps
@@ -63,3 +93,6 @@ class Lattice:
             if np.random.rand() >= np.exp(-dH):
                 self.phi = phi_0
                 self.action = S_0
+
+                return False
+        return True
